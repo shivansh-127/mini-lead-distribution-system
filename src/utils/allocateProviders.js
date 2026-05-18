@@ -56,11 +56,12 @@ while (
   });
 
   const alreadyAssigned =
-    assignedProviders.some(
-      (p) =>
-        p._id.toString() ===
-        provider._id.toString()
-    );
+  provider &&
+  assignedProviders.some(
+    (p) =>
+      p._id.toString() ===
+      provider._id.toString()
+  );
 
   if (
     provider &&
