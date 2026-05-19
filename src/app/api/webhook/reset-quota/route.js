@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/mongodb";
 import Provider from "@/models/Provider";
+import Lead from "@/models/Lead";
 import WebhookLog from "@/models/WebhookLog";
 import { NextResponse } from "next/server";
 
@@ -8,7 +9,6 @@ export async function POST(req) {
     await connectDB();
 
     const body = await req.json();
-
     const { webhookId } = body;
 
     // Idempotency check
@@ -25,7 +25,7 @@ export async function POST(req) {
       });
     }
 
-    // Reset quotas
+    // Reset provider quota
     await Provider.updateMany(
       {},
       {
@@ -33,7 +33,14 @@ export async function POST(req) {
       }
     );
 
-    // Save webhook log
+    // Delete leads
+    await Lead.deleteMany({});
+
+    // Optional:
+    // clear old webhook logs
+    await WebhookLog.deleteMany({});
+
+    // Save current webhook
     await WebhookLog.create({
       webhookId,
       processed: true,
@@ -41,7 +48,8 @@ export async function POST(req) {
 
     return NextResponse.json({
       success: true,
-      message: "Quota reset successful",
+      message:
+        "System reset successful",
     });
   } catch (error) {
     return NextResponse.json(
