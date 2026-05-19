@@ -123,7 +123,7 @@ export default function RequestServicePage() {
         </button>
 
         {message && (
-          <p className="mt-4 text-center">
+          <p className="mt-4 text-center text-black font-semibold">
             {message}
           </p>
         )}
