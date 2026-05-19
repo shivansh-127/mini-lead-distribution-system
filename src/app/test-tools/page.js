@@ -8,7 +8,7 @@ export default function TestToolsPage() {
 
   const resetQuota = async () => {
     const webhookId =
-      "payment-success-123";
+      Date.now().toString();
 
     const res = await fetch(
       "/api/webhook/reset-quota",
