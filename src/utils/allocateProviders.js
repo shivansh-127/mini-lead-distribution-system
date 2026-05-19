@@ -86,17 +86,55 @@ if (assignedProviders.length < 3) {
 
   await allocationState.save();
 
-  // STEP 3 — Increment quota safely
+ // STEP 3 — Increment quota safely with transaction
+
+const session =
+  await Provider.startSession();
+
+session.startTransaction();
+
+try {
+
   for (const provider of assignedProviders) {
-    await Provider.findByIdAndUpdate(
-      provider._id,
-      {
-        $inc: {
-          usedQuota: 1,
+
+    const updatedProvider =
+      await Provider.findOneAndUpdate(
+        {
+          _id: provider._id,
+          usedQuota: {
+            $lt:
+              provider.monthlyQuota,
+          },
         },
-      }
-    );
+        {
+          $inc: {
+            usedQuota: 1,
+          },
+        },
+        {
+          new: true,
+          session,
+        }
+      );
+
+    if (!updatedProvider) {
+      throw new Error(
+        "Provider quota exceeded during allocation"
+      );
+    }
   }
 
+  await session.commitTransaction();
+
+} catch (err) {
+
+  await session.abortTransaction();
+
+  throw err;
+
+} finally {
+
+  await session.endSession();
+}
   return assignedProviders;
 }
